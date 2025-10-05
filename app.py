@@ -60,6 +60,7 @@ def add_new_player():
 def index():
     if request.method == "POST":
         session['game_type'] = request.form.get('game_type')
+        print("Selected game type:", session['game_type'])
         return redirect(url_for('team_selection'))
     return render_template("game_type.html")
 
