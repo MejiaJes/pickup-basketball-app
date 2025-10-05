@@ -3,10 +3,32 @@
 <head>
     <title>Pickup Basketball - Select Game</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        button { padding: 15px 40px; font-size: 18px; margin: 10px; cursor: pointer; }
-        .selected { background-color: #4CAF50; color: white; }
-        #next-btn, #metrics-btn { display: none; margin-top: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin-top: 50px; 
+        }
+        button { 
+            padding: 15px 40px; 
+            font-size: 18px; 
+            margin: 10px; 
+            cursor: pointer; 
+        }
+        .selected { 
+            background-color: #4CAF50; 
+            color: white; 
+        }
+        #next-btn, #metrics-btn { 
+            display: none; 
+            margin-top: 20px; 
+        }
+        .game-image {
+            margin-top: 30px;
+            width: 400px;
+            max-width: 90%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -19,13 +41,16 @@
         <input type="hidden" name="game_type" id="game_type_input">
     </form>
 
+    <!-- Add your image below the selection -->
+    <img src="{{ url_for('static', filename='images/JanealPic.jpeg') }}" alt="Basketball Game" class="game-image">
+
     <!-- Leaderboard button -->
     <a href="{{ url_for('leaderboard') }}">
         <button type="button" id="metrics-btn" style="display:inline-block;">View Leaderboard</button>
     </a>
 
     <script>
-        const buttons = document.querySelectorAll('button[type="button"]');
+        const buttons = document.querySelectorAll('button[type="button"][name="game_type"]');
         const nextBtn = document.getElementById('next-btn');
         const metricsBtn = document.getElementById('metrics-btn');
         const gameTypeInput = document.getElementById('game_type_input');
