@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Team Selection</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+        .team { margin-bottom: 40px; }
+        input { padding: 8px; font-size: 16px; margin: 5px; width: 180px; }
+        button { padding: 12px 30px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .warning { color: red; font-weight: bold; margin-bottom: 10px; }
+        .new-player { margin-top: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>Team Selection</h1>
+
+    <form method="POST" id="team-form">
+        <!-- Team A -->
+        <div class="team">
+            <h2>Team A</h2>
+            {% for i in range(num_players) %}
+                <input list="players_list" name="team_a_player{{i+1}}" class="team-a-input" autocomplete="off" placeholder="Player {{i+1}}" required><br>
+            {% endfor %}
+            <div id="team-a-warning" class="warning"></div>
+        </div>
+
+        <!-- Team B -->
+        <div class="team">
+            <h2>Team B</h2>
+            {% for i in range(num_players) %}
+                <input list="players_list" name="team_b_player{{i+1}}" class="team-b-input" autocomplete="off" placeholder="Player {{i+1}}" required><br>
+            {% endfor %}
+            <div id="team-b-warning" class="warning"></div>
+        </div>
+
+        <datalist id="players_list">
+            {% for player in players %}
+            <option value="{{ player }}">
+            {% endfor %}
+        </datalist>
+
+        <div class="new-player">
+            <h3>New Player? Add Here:</h3>
+            Name: <input type="text" id="new_player_name" placeholder="Name"><br>
+            WhatsApp: <input type="text" id="new_player_phone" placeholder="+1XXXXXXXXXX"><br>
+            <button type="button" onclick="addNewPlayer()">Add Player</button>
+        </div>
+
+        <button type="submit" id="next-btn" style="display:none;">Next: Log Shots</button>
+    </form>
+
+    <form method="GET" action="{{ url_for('index') }}">
+        <button type="submit" style="margin-top:10px;">Back: Select Game Type</button>
+    </form>
+
+    <script>
+        const nextBtn = document.getElementById('next-btn');
+        const teamAInputs = document.querySelectorAll('.team-a-input');
+        const teamBInputs = document.querySelectorAll('.team-b-input');
+        const teamAWarning = document.getElementById('team-a-warning');
+        const teamBWarning = document.getElementById('team-b-warning');
+
+        function checkDuplicates(inputs) {
+            const names = [];
+            let duplicate = false;
+            inputs.forEach(input => {
+                const val = input.value.trim();
+                if(val){
+                    if(names.includes(val.toLowerCase())) duplicate = true;
+                    else names.push(val.toLowerCase());
+                }
+            });
+            return duplicate;
+        }
+
+        function allFilled(inputs) {
+            return Array.from(inputs).every(input => input.value.trim() !== '');
+        }
+
+        function validateTeams() {
+            const aDuplicate = checkDuplicates(teamAInputs);
+            const bDuplicate = checkDuplicates(teamBInputs);
+
+            teamAWarning.textContent = aDuplicate ? "Duplicate name in Team A!" : "";
+            teamBWarning.textContent = bDuplicate ? "Duplicate name in Team B!" : "";
+
+            if(!aDuplicate && !bDuplicate && allFilled(teamAInputs) && allFilled(teamBInputs)){
+                nextBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'none';
+            }
+        }
+
+        [...teamAInputs, ...teamBInputs].forEach(input => {
+            input.addEventListener('input', validateTeams);
+        });
+
+        function addNewPlayer() {
+            const name = document.getElementById('new_player_name').value.trim();
+            const phone = document.getElementById('new_player_phone').value.trim();
+            if(!name || !phone){
+                alert("Please enter both name and WhatsApp number");
+                return;
+            }
+
+            // Add to team A or B automatically (for simplicity, first empty slot)
+            const allInputs = [...teamAInputs, ...teamBInputs];
+            const emptyInput = allInputs.find(i => i.value.trim() === '');
+            if(emptyInput){
+                emptyInput.value = name;
+                // Optional: send phone number to backend via AJAX to update Supabase players table
+                fetch('/add_new_player', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, phone: phone })
+                }).then(res => res.json())
+                  .then(data => {
+                      if(data.status !== 'ok') alert(data.message);
+                  });
+                document.getElementById('new_player_name').value = '';
+                document.getElementById('new_player_phone').value = '';
+                validateTeams();
+            } else {
+                alert("All player slots are full!");
+            }
+        }
+    </script>
+</body>
+</html>

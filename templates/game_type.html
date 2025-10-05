@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pickup Basketball - Select Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        button { padding: 15px 40px; font-size: 18px; margin: 10px; cursor: pointer; }
+        .selected { background-color: #4CAF50; color: white; }
+        #next-btn, #metrics-btn { display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Select Game Type</h1>
+    <form method="POST" id="game-form">
+        <button type="button" name="game_type" value="3v3">3v3</button>
+        <button type="button" name="game_type" value="4v4">4v4</button>
+        <br>
+        <button type="submit" id="next-btn">Next</button>
+        <input type="hidden" name="game_type" id="game_type_input">
+    </form>
+
+    <!-- Leaderboard button -->
+    <a href="{{ url_for('leaderboard') }}">
+        <button type="button" id="metrics-btn" style="display:inline-block;">View Leaderboard</button>
+    </a>
+
+    <script>
+        const buttons = document.querySelectorAll('button[type="button"]');
+        const nextBtn = document.getElementById('next-btn');
+        const metricsBtn = document.getElementById('metrics-btn');
+        const gameTypeInput = document.getElementById('game_type_input');
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                buttons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                nextBtn.style.display = 'inline-block';
+                metricsBtn.style.display = 'inline-block';  // show leaderboard button too
+                gameTypeInput.value = btn.value;
+            });
+        });
+    </script>
+</body>
+</html>

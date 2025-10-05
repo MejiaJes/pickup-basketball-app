@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Loss</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 30px; border-radius: 10px; }
+        h1 { color: #cc0000; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        .confirm { background-color: #cc0000; color: white; border: none; }
+        .dispute { background-color: #0077cc; color: white; border: none; }
+        .message { margin-top: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Game Result</h1>
+        <p>Your team has lost this game. Please confirm:</p>
+
+        <form method="POST" action="{{ url_for('confirm_loss', confirmation_id=confirmation_id) }}">
+            <button type="submit" name="response" value="confirm" class="confirm">Confirm Loss</button>
+            <button type="submit" name="response" value="dispute" class="dispute">Dispute Loss</button>
+        </form>
+
+        {% if message %}
+        <div class="message">{{ message }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>
