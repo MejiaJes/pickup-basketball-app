@@ -10,3 +10,4 @@ __pycache__/
 
 # VSCode settings (optional)
 .vscode/
+.DS_Store
