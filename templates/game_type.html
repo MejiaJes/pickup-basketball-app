@@ -2,55 +2,129 @@
 <html>
 <head>
     <title>Pickup Basketball - Select Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { 
             font-family: Arial, sans-serif; 
             text-align: center; 
-            margin-top: 50px; 
+            margin: 0; 
+            padding: 20px;
+            background: linear-gradient(to bottom, #f2f2f2, #ffffff);
+            overflow-x: hidden;
+            position: relative;
         }
-        button { 
-            padding: 15px 40px; 
-            font-size: 18px; 
-            margin: 10px; 
+
+        h1 {
+            margin-top: 30px;
+            font-size: 2em;
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        button.game-btn { 
+            padding: 20px 60px; 
+            font-size: 22px; 
+            margin: 15px; 
             cursor: pointer; 
+            border-radius: 12px;
+            border: 2px solid #0077cc;
+            transition: transform 0.1s, box-shadow 0.2s;
         }
-        .selected { 
+
+        button.game-btn.selected {
             background-color: #4CAF50; 
             color: white; 
+            border-color: #4CAF50;
         }
+
         #next-btn, #metrics-btn { 
             display: none; 
-            margin-top: 20px; 
+            margin-top: 20px;
+            padding: 18px 60px;
+            font-size: 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            background-color: #0077cc;
+            color: white;
+            transition: transform 0.1s;
         }
-        .game-image {
+
+        #next-btn:hover, #metrics-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .images-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-top: 30px;
-            width: 400px;
-            max-width: 90%;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            gap: 20px;
+        }
+
+        .images-container img {
+            width: 300px;
+            max-width: 40%;
+            border-radius: 15px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        /* Responsive for small screens */
+        @media (max-width: 600px) {
+            button.game-btn {
+                width: 80%;
+                font-size: 20px;
+                padding: 18px 0;
+            }
+            #next-btn, #metrics-btn {
+                width: 80%;
+                font-size: 20px;
+                padding: 18px 0;
+            }
+            .images-container {
+                flex-direction: column;
+            }
+            .images-container img {
+                width: 80%;
+                margin-bottom: 15px;
+            }
+        }
+
+        /* Basketball */
+        #basketball {
+            position: fixed;
+            width: 50px;
+            pointer-events: none;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
     <h1>Select Game Type</h1>
     <form method="POST" id="game-form">
-        <button type="button" name="game_type" value="3v3">3v3</button>
-        <button type="button" name="game_type" value="4v4">4v4</button>
+        <button type="button" name="game_type" value="3v3" class="game-btn">3v3</button>
+        <button type="button" name="game_type" value="4v4" class="game-btn">4v4</button>
         <br>
         <button type="submit" id="next-btn">Next</button>
         <input type="hidden" name="game_type" id="game_type_input">
     </form>
 
-    <!-- Add your image below the selection -->
-    <img src="{{ url_for('static', filename='images/JanealPic.jpeg') }}" alt="Basketball Game" class="game-image">
+    <div class="images-container">
+        <img src="{{ url_for('static', filename='images/BasketballCourt.jpeg') }}" alt="Basketball Court">
+        <img src="{{ url_for('static', filename='images/JanealPic.jpeg') }}" alt="Player">
+    </div>
 
-    <!-- Leaderboard button -->
     <a href="{{ url_for('leaderboard') }}">
-        <button type="button" id="metrics-btn" style="display:inline-block;">View Leaderboard</button>
+        <button type="button" id="metrics-btn" style="display:inline-block; margin-top:20px;">View Leaderboard</button>
     </a>
 
+    <img id="basketball" src="{{ url_for('static', filename='images/basketball.png') }}" alt="Basketball">
+
     <script>
-        const buttons = document.querySelectorAll('button[type="button"][name="game_type"]');
+        const buttons = document.querySelectorAll('button.game-btn');
         const nextBtn = document.getElementById('next-btn');
         const metricsBtn = document.getElementById('metrics-btn');
         const gameTypeInput = document.getElementById('game_type_input');
@@ -60,10 +134,31 @@
                 buttons.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 nextBtn.style.display = 'inline-block';
-                metricsBtn.style.display = 'inline-block';  // show leaderboard button too
+                metricsBtn.style.display = 'inline-block';
                 gameTypeInput.value = btn.value;
             });
         });
+
+        // Basketball bouncing
+        const ball = document.getElementById('basketball');
+        let x = Math.random() * (window.innerWidth - 50);
+        let y = Math.random() * (window.innerHeight - 50);
+        let dx = 2 + Math.random() * 2;
+        let dy = 2 + Math.random() * 2;
+
+        function moveBall() {
+            x += dx;
+            y += dy;
+
+            if (x <= 0 || x >= window.innerWidth - 50) dx *= -1;
+            if (y <= 0 || y >= window.innerHeight - 50) dy *= -1;
+
+            ball.style.left = x + 'px';
+            ball.style.top = y + 'px';
+
+            requestAnimationFrame(moveBall);
+        }
+        moveBall();
     </script>
 </body>
 </html>

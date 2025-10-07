@@ -1,129 +1,234 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Team Selection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
-        .team { margin-bottom: 40px; }
-        input { padding: 8px; font-size: 16px; margin: 5px; width: 180px; }
-        button { padding: 12px 30px; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        .warning { color: red; font-weight: bold; margin-bottom: 10px; }
-        .new-player { margin-top: 20px; font-size: 14px; }
+        /* Base styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        /* Team containers */
+        .team {
+            width: 90%;
+            max-width: 450px;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .team-a {
+            border-left: 5px solid #2196F3;
+            background-color: #E3F2FD;
+        }
+
+        .team-b {
+            border-left: 5px solid #F44336;
+            background-color: #FFEBEE;
+        }
+
+        /* Player input rows */
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .player-row input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            transition: border-color 0.2s;
+        }
+
+        .player-row input:hover {
+            border-color: #888;
+        }
+
+        @media (max-width: 500px) {
+            .player-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* Buttons */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .begin-game-btn, .back-btn {
+            width: 70%;
+            max-width: 400px;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 10px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s, opacity 0.3s;
+        }
+
+        .begin-game-btn {
+            background-color: #4CAF50;
+            display: none;
+            opacity: 0;
+        }
+
+        .begin-game-btn.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        .begin-game-btn:hover {
+            background-color: #45a049;
+            transform: scale(1.03);
+        }
+
+        .back-btn {
+            background-color: #9E9E9E;
+        }
+
+        .back-btn:hover {
+            background-color: #757575;
+            transform: scale(1.03);
+        }
+
+        /* Small hint text */
+        .hint {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h1>Team Selection</h1>
+    <h1>Select Teams</h1>
+    <p class="hint">Enter each player’s name and phone number — make sure everyone’s ready!</p>
 
-    <form method="POST" id="team-form">
-        <!-- Team A -->
-        <div class="team">
-            <h2>Team A</h2>
-            {% for i in range(num_players) %}
-                <input list="players_list" name="team_a_player{{i+1}}" class="team-a-input" autocomplete="off" placeholder="Player {{i+1}}" required><br>
-            {% endfor %}
-            <div id="team-a-warning" class="warning"></div>
+    <form id="team-form">
+        <div class="team team-a" id="team-a">
+            <h2>Team A (Blue)</h2>
         </div>
 
-        <!-- Team B -->
-        <div class="team">
-            <h2>Team B</h2>
-            {% for i in range(num_players) %}
-                <input list="players_list" name="team_b_player{{i+1}}" class="team-b-input" autocomplete="off" placeholder="Player {{i+1}}" required><br>
-            {% endfor %}
-            <div id="team-b-warning" class="warning"></div>
+        <div class="team team-b" id="team-b">
+            <h2>Team B (Red)</h2>
         </div>
 
-        <datalist id="players_list">
-            {% for player in players %}
-            <option value="{{ player }}">
-            {% endfor %}
-        </datalist>
-
-        <div class="new-player">
-            <h3>New Player? Add Here:</h3>
-            Name: <input type="text" id="new_player_name" placeholder="Name"><br>
-            WhatsApp: <input type="text" id="new_player_phone" placeholder="+1XXXXXXXXXX"><br>
-            <button type="button" onclick="addNewPlayer()">Add Player</button>
+        <div class="button-container">
+            <button type="button" class="back-btn" onclick="window.location.href='{{ url_for('index') }}'">
+                ← Back to Game Selection
+            </button>
+            <button type="button" class="begin-game-btn" id="begin-game">Begin Game</button>
         </div>
-
-        <button type="submit" id="next-btn" style="display:none;">Next: Log Shots</button>
     </form>
 
-    <form method="GET" action="{{ url_for('index') }}">
-        <button type="submit" style="margin-top:10px;">Back: Select Game Type</button>
-    </form>
+    <!-- Datalist for existing players -->
+    <datalist id="players-list">
+        {% for player in players %}
+        <option value="{{ player }}"></option>
+        {% endfor %}
+    </datalist>
 
     <script>
-        const nextBtn = document.getElementById('next-btn');
-        const teamAInputs = document.querySelectorAll('.team-a-input');
-        const teamBInputs = document.querySelectorAll('.team-b-input');
-        const teamAWarning = document.getElementById('team-a-warning');
-        const teamBWarning = document.getElementById('team-b-warning');
+        const numPlayers = {{ num_players }};
+        const teamAContainer = document.getElementById('team-a');
+        const teamBContainer = document.getElementById('team-b');
+        const beginGameBtn = document.getElementById('begin-game');
 
-        function checkDuplicates(inputs) {
-            const names = [];
-            let duplicate = false;
-            inputs.forEach(input => {
-                const val = input.value.trim();
-                if(val){
-                    if(names.includes(val.toLowerCase())) duplicate = true;
-                    else names.push(val.toLowerCase());
-                }
+        // Create input rows dynamically
+        function createPlayerRow(teamContainer, index, teamPrefix) {
+            const row = document.createElement('div');
+            row.className = 'player-row';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = `Player ${index + 1} Name`;
+            nameInput.name = `${teamPrefix}_player${index + 1}_name`;
+            nameInput.className = 'player-name';
+            nameInput.setAttribute('list', 'players-list');
+
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'tel';
+            phoneInput.placeholder = 'Phone (optional)';
+            phoneInput.name = `${teamPrefix}_player${index + 1}_phone`;
+            phoneInput.className = 'player-phone';
+
+            row.appendChild(nameInput);
+            row.appendChild(phoneInput);
+            teamContainer.appendChild(row);
+        }
+
+        // Generate rows for each team
+        for (let i = 0; i < numPlayers; i++) {
+            createPlayerRow(teamAContainer, i, "team_a");
+            createPlayerRow(teamBContainer, i, "team_b");
+        }
+
+        // Check if all names filled to show "Begin Game"
+        function checkInputs() {
+            const names = document.querySelectorAll('.player-name');
+            let allFilled = true;
+            names.forEach(input => {
+                if (!input.value.trim()) allFilled = false;
             });
-            return duplicate;
-        }
 
-        function allFilled(inputs) {
-            return Array.from(inputs).every(input => input.value.trim() !== '');
-        }
-
-        function validateTeams() {
-            const aDuplicate = checkDuplicates(teamAInputs);
-            const bDuplicate = checkDuplicates(teamBInputs);
-
-            teamAWarning.textContent = aDuplicate ? "Duplicate name in Team A!" : "";
-            teamBWarning.textContent = bDuplicate ? "Duplicate name in Team B!" : "";
-
-            if(!aDuplicate && !bDuplicate && allFilled(teamAInputs) && allFilled(teamBInputs)){
-                nextBtn.style.display = 'inline-block';
+            if (allFilled) {
+                beginGameBtn.classList.add('visible');
             } else {
-                nextBtn.style.display = 'none';
+                beginGameBtn.classList.remove('visible');
             }
         }
 
-        [...teamAInputs, ...teamBInputs].forEach(input => {
-            input.addEventListener('input', validateTeams);
+        document.addEventListener('input', checkInputs);
+
+        // Begin Game button handler
+        beginGameBtn.addEventListener('click', async () => {
+            const formData = new FormData(document.getElementById('team-form'));
+            const data = {};
+            formData.forEach((value, key) => data[key] = value.trim());
+
+            const response = await fetch("/team_selection", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                alert("Something went wrong — please try again.");
+            }
         });
-
-        function addNewPlayer() {
-            const name = document.getElementById('new_player_name').value.trim();
-            const phone = document.getElementById('new_player_phone').value.trim();
-            if(!name || !phone){
-                alert("Please enter both name and WhatsApp number");
-                return;
-            }
-
-            // Add to team A or B automatically (for simplicity, first empty slot)
-            const allInputs = [...teamAInputs, ...teamBInputs];
-            const emptyInput = allInputs.find(i => i.value.trim() === '');
-            if(emptyInput){
-                emptyInput.value = name;
-                // Optional: send phone number to backend via AJAX to update Supabase players table
-                fetch('/add_new_player', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, phone: phone })
-                }).then(res => res.json())
-                  .then(data => {
-                      if(data.status !== 'ok') alert(data.message);
-                  });
-                document.getElementById('new_player_name').value = '';
-                document.getElementById('new_player_phone').value = '';
-                validateTeams();
-            } else {
-                alert("All player slots are full!");
-            }
-        }
     </script>
 </body>
 </html>

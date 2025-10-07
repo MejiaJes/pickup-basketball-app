@@ -1,127 +1,259 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Keep Score</title>
+    <meta charset="UTF-8">
+    <title>Live Game Logging</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; }
-        .team { margin-bottom: 30px; padding: 10px; border-radius: 5px; }
-        .team-a { background-color: #ffcccc; }
-        .team-b { background-color: #cce0ff; }
-        h2 { margin-bottom: 10px; }
-        .player { margin-bottom: 5px; }
-        .score { font-weight: bold; margin-left: 10px; }
-        button { padding: 5px 10px; margin-left: 5px; cursor: pointer; }
-        #scoreboard { font-size: 20px; margin-bottom: 20px; }
-        #game-over { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            background: #f2f2f2;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .reminder {
+            text-align: center;
+            font-size: 1em;
+            color: #d32f2f;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #f9f9f9; /* light background */
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .scoreboard .team {
+            color: #333;
+        }
+
+        .scoreboard .probabilities {
+            font-size: 1em;
+            text-align: center;
+            color: #555;
+        }
+
+        .team-container {
+            display: flex;
+            flex-direction: column; /* vertical stack */
+            gap: 20px;
+        }
+
+        .team {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .team h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .player {
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            gap: 5px;
+        }
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: background 0.2s;
+        }
+
+        button.increment { background-color: #4CAF50; color: white; }
+        button.increment:hover { background-color: #45a049; }
+        button.decrement { background-color: #f44336; color: white; }
+        button.decrement:hover { background-color: #da190b; }
+
+        .total {
+            font-weight: bold;
+        }
+
+        .team-total {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        #game-over {
+            display: block;
+            margin: 25px auto;
+            padding: 15px 40px;
+            font-size: 18px;
+            background-color: #0077cc;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            border: none;
+        }
+
+        #game-over:hover {
+            background-color: #005fa3;
+        }
+
+        @media (max-width: 600px) {
+            .scoreboard {
+                flex-direction: column;
+                gap: 10px;
+                font-size: 1.3em;
+            }
+
+            .score-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Keep Score</h1>
-
-    <div id="scoreboard">
-        Team A: <span id="team-a-total">0</span> - 
-        Team B: <span id="team-b-total">0</span>
+    <h1>Live Game Logging 🏀</h1>
+    <div class="reminder">
+        ⚠️ Keep your eyes on the game! Don’t let the ball run away while you scroll! 🏀😜
     </div>
 
-    <div class="team team-a">
-        <h2>Team A</h2>
-        {% for player in team_a %}
-        <div class="player" data-player="{{ player }}" data-team="A">
-            {{ player }}: 
-            1pt <span class="score1">0</span>, 
-            2pt <span class="score2">0</span>, 
-            Total <span class="score-total">0</span>
-            <button onclick="addScore('{{ player }}', 'A', 1)">+1</button>
-            <button onclick="addScore('{{ player }}', 'A', 2)">+2</button>
-            <button onclick="removeScore('{{ player }}', 'A', 1)">-1</button>
-            <button onclick="removeScore('{{ player }}', 'A', 2)">-2</button>
+    <div class="scoreboard">
+        <div class="team">Team A: <span id="team-a-total">0</span></div>
+        <div class="probabilities">
+            Team A Win: {{ (win_prob_a*100)|round(1) }}% <br>
+            Team B Win: {{ (win_prob_b*100)|round(1) }}%
         </div>
-        {% endfor %}
+        <div class="team">Team B: <span id="team-b-total">0</span></div>
     </div>
 
-    <div class="team team-b">
-        <h2>Team B</h2>
-        {% for player in team_b %}
-        <div class="player" data-player="{{ player }}" data-team="B">
-            {{ player }}: 
-            1pt <span class="score1">0</span>, 
-            2pt <span class="score2">0</span>, 
-            Total <span class="score-total">0</span>
-            <button onclick="addScore('{{ player }}', 'B', 1)">+1</button>
-            <button onclick="addScore('{{ player }}', 'B', 2)">+2</button>
-            <button onclick="removeScore('{{ player }}', 'B', 1)">-1</button>
-            <button onclick="removeScore('{{ player }}', 'B', 2)">-2</button>
+    <div class="team-container">
+        <!-- Team A -->
+        <div class="team" id="team-a">
+            <h2 style="color: blue;">Team A</h2>
+            {% for player in team_a %}
+            <div class="player" id="player-{{ loop.index }}">
+                <div class="player-name">{{ player }}</div>
+                <div class="score-row">
+                    <button class="increment" onclick="updateScore('{{ player }}', 1)">+1</button>
+                    <button class="decrement" onclick="updateScore('{{ player }}', -1)">-1</button>
+                    <span>1pt Shots: <span id="{{ player|replace(' ', '_') }}_1">0</span></span>
+                </div>
+                <div class="score-row">
+                    <button class="increment" onclick="updateScore('{{ player }}', 2)">+2</button>
+                    <button class="decrement" onclick="updateScore('{{ player }}', -2)">-2</button>
+                    <span>2pt Shots: <span id="{{ player|replace(' ', '_') }}_2">0</span></span>
+                </div>
+                <div class="total">Total: <span id="total-{{ player|replace(' ', '_') }}">0</span></div>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+
+        <!-- Team B -->
+        <div class="team" id="team-b">
+            <h2 style="color: red;">Team B</h2>
+            {% for player in team_b %}
+            <div class="player" id="player-{{ loop.index0 + team_a|length + 1 }}">
+                <div class="player-name">{{ player }}</div>
+                <div class="score-row">
+                    <button class="increment" onclick="updateScore('{{ player }}', 1)">+1</button>
+                    <button class="decrement" onclick="updateScore('{{ player }}', -1)">-1</button>
+                    <span>1pt Shots: <span id="{{ player|replace(' ', '_') }}_1">0</span></span>
+                </div>
+                <div class="score-row">
+                    <button class="increment" onclick="updateScore('{{ player }}', 2)">+2</button>
+                    <button class="decrement" onclick="updateScore('{{ player }}', -2)">-2</button>
+                    <span>2pt Shots: <span id="{{ player|replace(' ', '_') }}_2">0</span></span>
+                </div>
+                <div class="total">Total: <span id="total-{{ player|replace(' ', '_') }}">0</span></div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
-    <button id="game-over" onclick="confirmGameOver()">Game Over</button>
+    <button id="game-over" onclick="finalizeGame()">Game Over</button>
 
     <script>
-        const playerScores = {};
-        let teamTotals = { A: 0, B: 0 };
+        const scores = {};
+        {% for player in team_a %}
+        scores["{{ player }}"] = {points_1:0, points_2:0};
+        {% endfor %}
+        {% for player in team_b %}
+        scores["{{ player }}"] = {points_1:0, points_2:0};
+        {% endfor %}
 
-        function addScore(player, team, points){
-            if(!playerScores[player]) playerScores[player] = {points_1: 0, points_2: 0, total_points: 0};
-
-            if(points === 1) playerScores[player].points_1 += 1;
-            else if(points === 2) playerScores[player].points_2 += 1;
-
-            playerScores[player].total_points += points;
-            teamTotals[team] += points;
-
-            updateUI(player, team);
-        }
-
-        function removeScore(player, team, points){
-            if(!playerScores[player]) return;
-
-            if(points === 1 && playerScores[player].points_1 > 0){
-                playerScores[player].points_1 -= 1;
-                playerScores[player].total_points -= 1;
-                teamTotals[team] -= 1;
-            } 
-            else if(points === 2 && playerScores[player].points_2 > 0){
-                playerScores[player].points_2 -= 1;
-                playerScores[player].total_points -= 2;
-                teamTotals[team] -= 2;
+        function updateScore(player, value) {
+            if (value === 1) {
+                scores[player].points_1 += 1;
+                if (scores[player].points_1 < 0) scores[player].points_1 = 0;
+                document.getElementById(player.replace(/ /g,'_') + "_1").innerText = scores[player].points_1;
+            } else if (value === 2) {
+                scores[player].points_2 += 1;
+                if (scores[player].points_2 < 0) scores[player].points_2 = 0;
+                document.getElementById(player.replace(/ /g,'_') + "_2").innerText = scores[player].points_2;
+            } else if (value === -1) {
+                scores[player].points_1 -= 1;
+                if (scores[player].points_1 < 0) scores[player].points_1 = 0;
+                document.getElementById(player.replace(/ /g,'_') + "_1").innerText = scores[player].points_1;
+            } else if (value === -2) {
+                scores[player].points_2 -= 1;
+                if (scores[player].points_2 < 0) scores[player].points_2 = 0;
+                document.getElementById(player.replace(/ /g,'_') + "_2").innerText = scores[player].points_2;
             }
-
-            updateUI(player, team);
+            document.getElementById("total-" + player.replace(/ /g,'_')).innerText = scores[player].points_1 + 2*scores[player].points_2;
+            updateTeamTotals();
         }
 
-        function updateUI(player, team){
-            const playerDiv = document.querySelector(`.player[data-player='${player}']`);
-            playerDiv.querySelector(".score1").textContent = playerScores[player].points_1;
-            playerDiv.querySelector(".score2").textContent = playerScores[player].points_2;
-            playerDiv.querySelector(".score-total").textContent = playerScores[player].total_points;
-
-            document.getElementById("team-a-total").textContent = teamTotals['A'];
-            document.getElementById("team-b-total").textContent = teamTotals['B'];
+        function updateTeamTotals() {
+            let totalA = 0;
+            let totalB = 0;
+            {% for player in team_a %}
+            totalA += scores["{{ player }}"].points_1 + 2*scores["{{ player }}"].points_2;
+            {% endfor %}
+            {% for player in team_b %}
+            totalB += scores["{{ player }}"].points_1 + 2*scores["{{ player }}"].points_2;
+            {% endfor %}
+            document.getElementById("team-a-total").innerText = totalA;
+            document.getElementById("team-b-total").innerText = totalB;
         }
 
-        function confirmGameOver(){
-            let winner = teamTotals['A'] > teamTotals['B'] ? 'Team A' : 'Team B';
-            let message = `${winner} wins!\nFinal Score:\nTeam A: ${teamTotals['A']} - Team B: ${teamTotals['B']}\nConfirm?`;
-
-            if(confirm(message)){
-                finalizeGame();
-            }
-        }
-
-        function finalizeGame(){
+        function finalizeGame() {
             fetch("/finalize_game", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(playerScores)
-            }).then(res => res.json())
-              .then(data => {
-                  alert("Game finalized! Scores saved.");
-                  window.location.href = "/leaderboard"; // redirect to leaderboard after confirmation
-              })
-              .catch(err => {
-                  alert("Error saving game: " + err);
-              });
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(scores)
+            }).then(response => response.json())
+            .then(data => {
+                alert("Game finalized! Game ID: " + data.game_id);
+                window.location.href = "/leaderboard";
+            }).catch(err => console.error(err));
         }
     </script>
 </body>

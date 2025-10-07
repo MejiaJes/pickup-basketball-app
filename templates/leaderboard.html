@@ -1,85 +1,232 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Leaderboard Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-        h1 { margin-bottom: 20px; text-align: center; }
-        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 45%; min-width: 300px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        button { padding: 10px 20px; font-size: 16px; margin-bottom: 10px; cursor: pointer; border-radius: 5px; border: none; background-color: #007BFF; color: white; }
-        button:hover { background-color: #0056b3; }
-        @media (max-width: 768px) {
-            .card { width: 100%; }
-        }
-    </style>
+<meta charset="utf-8" />
+<title>Leaderboard Dashboard</title>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f6;
+    background-image:
+      url('/static/images/BasketballCourt.jpeg'),
+      url('/static/images/basketball.png');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: cover;
+  }
+
+  h1 { text-align:center; margin-bottom:12px; color:#222; }
+  .top-actions { text-align:center; margin-bottom:18px; }
+  .back-btn {
+    display:inline-block;
+    padding:12px 26px;
+    font-size:18px;
+    border-radius:8px;
+    background:#007BFF;
+    color:#fff;
+    text-decoration:none;
+  }
+
+  /* Grid layout for metrics */
+  .container {
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    justify-content:center;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.95);
+    color: #222;
+    width: 45%;
+    min-width: 320px;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  table.elo {
+    width:100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  table.elo th, table.elo td {
+    padding:8px 10px;
+    border-bottom: 1px solid #e6e6e6;
+    text-align:left;
+  }
+  table.elo th { background:#f1f5f9; }
+
+  .bar-row { display:flex; align-items:center; gap:12px; margin: 10px 0; }
+  .player-label { width: 30%; min-width: 120px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-holder { width: 70%; display:flex; align-items:center; position:relative; min-width: 150px; }
+  .bar { height:34px; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding-right:10px; color:#fff; font-weight:700; transition: width 0.7s ease; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1); }
+  .bar.points { background:#2176D2; }
+  .bar._2pt    { background:#2AA653; }
+  .bar.winpct  { background:#FF8A00; }
+  .avg-line { position:absolute; width:2px; background: red; top: 6px; bottom: 6px; z-index: 3; }
+  .avg-label { position:absolute; transform: translateX(-50%); top: -18px; color: red; font-weight:700; font-size:13px; z-index:4; }
+
+  /* Last game box */
+  .last-game-box {
+    background-color: #f7f7f7;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-top: 25px;
+    width: 60%;
+    max-width: 600px;
+    color: #222;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .last-game-box h3 { margin-top:0; text-align:center; }
+  .last-game-teams {
+    display:flex;
+    justify-content:space-between;
+    margin-top: 15px;
+    gap: 10px;
+  }
+  .last-game-team {
+    width:48%;
+    background-color:#fff;
+    padding:10px;
+    border-radius:10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  .last-game-team h4 { text-align:center; margin:0 0 8px 0; }
+  .last-game-team ul { list-style:none; padding:0; margin:0; }
+  .last-game-team li { display:flex; justify-content:space-between; margin:4px 0; }
+
+  @media (max-width: 820px) {
+    .card { width: 100%; }
+    .player-label { width: 40%; }
+    .bar-holder { width: 60%; }
+    .last-game-box { width: 100%; }
+    .last-game-teams { flex-direction: column; }
+    .last-game-team { width: 100%; }
+  }
+</style>
 </head>
 <body>
 
-    <h1>Leaderboard Dashboard</h1>
-    <div style="text-align: center;">
-        <button onclick="location.href='/'">Back to Home</button>
+<h1>Leaderboard Dashboard</h1>
+<div class="top-actions">
+  <a class="back-btn" href="/">← Back to Home</a>
+</div>
+
+<div class="container">
+
+  <!-- Top 5 Elo -->
+  <div class="card">
+    <h2>Top 5 Elo Ratings</h2>
+    <table class="elo">
+      <thead><tr><th>Player</th><th>Elo</th></tr></thead>
+      <tbody>
+        {% for player in top_elo %}
+        <tr>
+          <td>{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% endif %} {{ player.name }}</td>
+          <td>{{ "%.0f"|format(player.elo_rating) if player.elo_rating is defined else player.elo }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Top Scorers -->
+  <div class="card">
+    <h2>Top Scorers</h2>
+    {% set total_values = (all_players_total|map(attribute='total_points')|list) if all_players_total is defined else [] %}
+    {% set max_total = total_values|max if total_values|length > 0 else 1 %}
+    {% set avg_total = (total_values|sum / (total_values|length or 1))|round(1) if total_values|length > 0 else 0 %}
+    <div class="bar-holder" style="position:relative;">
+      <div class="avg-label" style="left: {{ (avg_total/max_total * 100)|round(1) }}%;">Avg {{ avg_total }}</div>
+      <div class="avg-line" style="left: {{ (avg_total/max_total * 100)|round(1) }}%;"></div>
     </div>
-
-    <div class="container">
-
-        <div class="card">
-            <h2>Top 5 Elo Rating</h2>
-            <table>
-                <tr><th>Player</th><th>Elo</th><th>Wins</th><th>Losses</th></tr>
-                {% for player in top_elo %}
-                <tr>
-                    <td>{{ player[0] }}</td>
-                    <td>{{ player[1] }}</td>
-                    <td>{{ player[2] }}</td>
-                    <td>{{ player[3] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="card">
-            <h2>Top 3 Two-Point Shots</h2>
-            <table>
-                <tr><th>Player</th><th>2-Point Shots</th></tr>
-                {% for player in top_2pt %}
-                <tr>
-                    <td>{{ player[0] }}</td>
-                    <td>{{ player[1] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="card">
-            <h2>Top 3 Total Points</h2>
-            <table>
-                <tr><th>Player</th><th>Total Points</th></tr>
-                {% for player in top_scorers %}
-                <tr>
-                    <td>{{ player[0] }}</td>
-                    <td>{{ player[1] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="card">
-            <h2>Top 3 Win Percentage</h2>
-            <table>
-                <tr><th>Player</th><th>Win %</th></tr>
-                {% for player in top_win_pct %}
-                <tr>
-                    <td>{{ player[0] }}</td>
-                    <td>{{ "%.2f"|format(player[1]) }}%</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
+    {% for p in top_total_points %}
+    <div class="bar-row">
+      <div class="player-label">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% endif %} {{ p.name }}</div>
+      <div class="bar-holder">
+        <div class="bar points" style="width: {{ ((p.total_points / (max_total or 1)) * 100)|round(1) }}%;">{{ p.total_points }}</div>
+      </div>
     </div>
+    {% endfor %}
+  </div>
+
+  <!-- Top 2-Point Shooters -->
+  <div class="card">
+    <h2>Top 2-Point Shooters</h2>
+    {% set two_values = (all_players_2pt|map(attribute='points_2')|list) if all_players_2pt is defined else [] %}
+    {% set max_2pt = two_values|max if two_values|length > 0 else 1 %}
+    {% set avg_2pt = (two_values|sum / (two_values|length or 1))|round(1) if two_values|length > 0 else 0 %}
+    <div class="bar-holder" style="position:relative;">
+      <div class="avg-label" style="left: {{ (avg_2pt/max_2pt * 100)|round(1) }}%;">Avg {{ avg_2pt }}</div>
+      <div class="avg-line" style="left: {{ (avg_2pt/max_2pt * 100)|round(1) }}%;"></div>
+    </div>
+    {% for p in top_2pt %}
+    <div class="bar-row">
+      <div class="player-label">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% endif %} {{ p.name }}</div>
+      <div class="bar-holder">
+        <div class="bar _2pt" style="width: {{ ((p.points_2 / (max_2pt or 1)) * 100)|round(1) }}%;">{{ p.points_2 }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Top Winners % -->
+  <div class="card">
+    <h2>Top Winners %</h2>
+    {% set win_values = (all_players_win_pct|map(attribute='win_pct')|list) if all_players_win_pct is defined else [] %}
+    {% set max_win = win_values|max if win_values|length > 0 else 1 %}
+    {% set avg_win = ((win_values|sum / (win_values|length or 1)) * 100)|round(1) if win_values|length > 0 else 0 %}
+    <div class="bar-holder" style="position:relative;">
+      <div class="avg-label" style="left: {{ (avg_win / (max_win*100) * 100)|round(1) }}%;">Avg {{ avg_win }}%</div>
+      <div class="avg-line" style="left: {{ (avg_win / (max_win*100) * 100)|round(1) }}%;"></div>
+    </div>
+    {% for p in top_win_pct %}
+    <div class="bar-row">
+      <div class="player-label">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% endif %} {{ p.name }}</div>
+      <div class="bar-holder">
+        <div class="bar winpct" style="width: {{ ((p.win_pct / (max_win or 1)) * 100)|round(1) }}%;">{{ (p.win_pct * 100)|round(1) }}%</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div> <!-- /container -->
+
+<!-- Last Game Results -->
+<div class="last-game-box">
+  <h3>Last Game Results — {{ game_date }}</h3>
+  {% if last_game %}
+    <p><strong>Game Type:</strong> {{ last_game.game_type }}</p>
+    <p><strong>Score:</strong> Team A {{ last_game.team_a_score }} — Team B {{ last_game.team_b_score }}</p>
+    <p><strong>Winner:</strong> Team {{ last_game.winner_team }}</p>
+
+    <div class="last-game-teams">
+      <div class="last-game-team">
+        <h4>Team A</h4>
+        <ul>
+          {% for p in team_a_players %}
+            <li><span>{{ p.name }}</span><span>{{ p.total_points }} pts</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="last-game-team">
+        <h4>Team B</h4>
+        <ul>
+          {% for p in team_b_players %}
+            <li><span>{{ p.name }}</span><span>{{ p.total_points }} pts</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% else %}
+    <p>No finalized games yet.</p>
+  {% endif %}
+</div>
+
 </body>
 </html>
